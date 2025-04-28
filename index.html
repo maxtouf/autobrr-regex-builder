@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Regex pour AutoBrr</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #4b5563;
+            --background: #111827;
+            --card-bg: #1f2937;
+            --text: #f3f4f6;
+            --border: #374151;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        header p {
+            color: #d1d5db;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background-color: var(--background);
+            color: var(--text);
+            font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #374151;
+        }
+        
+        .output {
+            margin-top: 10px;
+            background-color: var(--background);
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px;
+            background-color: var(--secondary);
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .copy-message {
+            color: var(--success);
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .presets-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .preset-btn {
+            background-color: var(--secondary);
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+        
+        .test-container {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .match-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .match-success {
+            background-color: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success);
+        }
+        
+        .match-fail {
+            background-color: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+        }
+        
+        .help-icon {
+            cursor: help;
+            margin-left: 5px;
+            color: var(--primary);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: var(--card-bg);
+            color: var(--text);
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .example-torrents {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+        
+        .example-torrent {
+            padding: 5px 0;
+            cursor: pointer;
+        }
+        
+        .example-torrent:hover {
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Générateur de Regex pour AutoBrr</h1>
+            <p>Créez facilement des expressions régulières pour capturer vos torrents préférés</p>
+        </header>
+        
+        <div class="card">
+            <h2>Configurer votre regex</h2>
+            
+            <div class="form-group">
+                <label>Préréglages rapides:</label>
+                <div class="presets-container">
+                    <button class="preset-btn" data-preset="formule1">Formule 1</button>
+                    <button class="preset-btn" data-preset="motogp">MotoGP</button>
+                    <button class="preset-btn" data-preset="enquete">Enquête Exclusive</button>
+                    <button class="preset-btn" data-preset="capital">Capital</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Nom du contenu (séries, émissions, etc.):</label>
+                <input type="text" id="contentName" placeholder="Ex: Formule 1, Capital, etc.">
+            </div>
+            
+            <div class="form-group">
+                <label>Options d'orthographe alternative:</label>
+                <div>
+                    <input type="checkbox" id="caseInsensitive" checked>
+                    <label for="caseInsensitive">Ignorer majuscules/minuscules</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="accentsInsensitive">
+                    <label for="accentsInsensitive">Ignorer accents (ê, é, è)</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Séparateurs autorisés:</label>
+                <div>
+                    <input type="checkbox" id="dotSeparator" checked>
+                    <label for="dotSeparator">Point (.)</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="spaceSeparator" checked>
+                    <label for="spaceSeparator">Espace</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="underscoreSeparator" checked>
+                    <label for="underscoreSeparator">Underscore (_)</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="dashSeparator" checked>
+                    <label for="dashSeparator">Tiret (-)</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Types de contenu à capturer 
+                    <span class="tooltip help-icon">ℹ️
+                        <span class="tooltip-text">Pour les émissions comme F1 ou MotoGP, vous pouvez spécifier quelles parties vous intéressent (course, podium, etc.)</span>
+                    </span>
+                </label>
+                <input type="text" id="contentType" placeholder="Ex: Course, Podium, etc. (laissez vide pour tout capturer)">
+            </div>
+            
+            <div class="form-group">
+                <label>Filtres supplémentaires 
+                    <span class="tooltip help-icon">ℹ️
+                        <span class="tooltip-text">Ajoutez des mots-clés comme FRENCH, 1080p, etc. pour affiner les résultats</span>
+                    </span>
+                </label>
+                <input type="text" id="additionalFilters" placeholder="Ex: FRENCH, 1080p, etc." value="FRENCH">
+            </div>
+            
+            <div class="form-group">
+                <button id="generateBtn">Générer Regex</button>
+                <button id="clearBtn" class="btn-secondary">Effacer</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Votre expression régulière:</label>
+                <div class="output" id="regexOutput">^.*FRENCH</div>
+                <button class="copy-btn" id="copyBtn">Copier <span class="copy-message" id="copyMessage">✓ Copié!</span></button>
+            </div>
+        </div>
+        
+        <div class="card test-container">
+            <h2>Tester votre regex</h2>
+            
+            <div class="form-group">
+                <label>Nom du torrent à tester:</label>
+                <input type="text" id="testTorrent" placeholder="Collez le nom d'un torrent pour tester">
+            </div>
+            
+            <div class="example-torrents">
+                <p>Exemples de torrents (cliquez pour sélectionner):</p>
+                <div class="example-torrent" data-torrent="Formule.1.Grand.Prix.Australie.2025.La.Course.FRENCH.1080p.WEB.X264-TFA">Formule.1.Grand.Prix.Australie.2025.La.Course.FRENCH.1080p.WEB.X264-TFA</div>
+                <div class="example-torrent" data-torrent="F1.GP.Monaco.Podium.FRENCH.720p.WEB-DL.AAC.x264">F1.GP.Monaco.Podium.FRENCH.720p.WEB-DL.AAC.x264</div>
+                <div class="example-torrent" data-torrent="MotoGP.2025.la.course.Allemagne.FRENCH.1080p">MotoGP.2025.la.course.Allemagne.FRENCH.1080p</div>
+                <div class="example-torrent" data-torrent="Enquete.Exclusive.S2025E10.Shenzhen.La.Ville.La.Plus.Futuriste.De.Chine.DOC.FRENCH.1080p.WEB.H264-bouba">Enquete.Exclusive.S2025E10.Shenzhen.La.Ville.La.Plus.Futuriste.De.Chine.DOC.FRENCH.1080p.WEB.H264-bouba</div>
+                <div class="example-torrent" data-torrent="Capital.S25E03.Les.Secrets.Des.Grandes.Surfaces.FRENCH.1080p">Capital.S25E03.Les.Secrets.Des.Grandes.Surfaces.FRENCH.1080p</div>
+            </div>
+            
+            <div class="form-group">
+                <button id="testBtn">Tester</button>
+            </div>
+            
+            <div id="matchResult"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const contentNameInput = document.getElementById('contentName');
+            const caseInsensitiveCheckbox = document.getElementById('caseInsensitive');
+            const accentsInsensitiveCheckbox = document.getElementById('accentsInsensitive');
+            const dotSeparatorCheckbox = document.getElementById('dotSeparator');
+            const spaceSeparatorCheckbox = document.getElementById('spaceSeparator');
+            const underscoreSeparatorCheckbox = document.getElementById('underscoreSeparator');
+            const dashSeparatorCheckbox = document.getElementById('dashSeparator');
+            const contentTypeInput = document.getElementById('contentType');
+            const additionalFiltersInput = document.getElementById('additionalFilters');
+            const regexOutput = document.getElementById('regexOutput');
+            const generateBtn = document.getElementById('generateBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyMessage = document.getElementById('copyMessage');
+            const testTorrentInput = document.getElementById('testTorrent');
+            const testBtn = document.getElementById('testBtn');
+            const matchResult = document.getElementById('matchResult');
+            const presetBtns = document.querySelectorAll('.preset-btn');
+            const exampleTorrents = document.querySelectorAll('.example-torrent');
+            
+            // Apply presets
+            presetBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const preset = this.getAttribute('data-preset');
+                    
+                    // Reset form
+                    clearForm();
+                    
+                    // Apply preset configurations
+                    switch(preset) {
+                        case 'formule1':
+                            contentNameInput.value = 'Formule 1, F1';
+                            contentTypeInput.value = 'Course, Podium';
+                            additionalFiltersInput.value = 'FRENCH';
+                            break;
+                        case 'motogp':
+                            contentNameInput.value = 'MotoGP';
+                            contentTypeInput.value = 'Course, la course';
+                            additionalFiltersInput.value = 'FRENCH';
+                            break;
+                        case 'enquete':
+                            contentNameInput.value = 'Enquête Exclusive, Enquete Exclusive';
+                            accentsInsensitiveCheckbox.checked = true;
+                            additionalFiltersInput.value = 'FRENCH';
+                            break;
+                        case 'capital':
+                            contentNameInput.value = 'Capital';
+                            additionalFiltersInput.value = 'FRENCH';
+                            break;
+                    }
+                    
+                    // Generate regex with new settings
+                    generateRegex();
+                });
+            });
+            
+            // Example torrents click handler
+            exampleTorrents.forEach(example => {
+                example.addEventListener('click', function() {
+                    const torrent = this.getAttribute('data-torrent');
+                    testTorrentInput.value = torrent;
+                });
+            });
+            
+            // Generate regex function
+            function generateRegex() {
+                let regex = '^';
+                
+                // Process content name
+                if (contentNameInput.value.trim()) {
+                    const contentNames = contentNameInput.value.split(',').map(name => name.trim());
+                    
+                    if (contentNames.length > 0) {
+                        // Start group for content names
+                        regex += '(';
+                        
+                        // Process each content name
+                        const processedNames = contentNames.map(name => {
+                            let processedName = '';
+                            
+                            // Process each character in the name
+                            for (let i = 0; i < name.length; i++) {
+                                const char = name[i];
+                                
+                                // Skip spaces within the name
+                                if (char === ' ') continue;
+                                
+                                // Handle case sensitivity
+                                if (caseInsensitiveCheckbox.checked && char.match(/[a-zA-Z]/)) {
+                                    const lower = char.toLowerCase();
+                                    const upper = char.toUpperCase();
+                                    
+                                    // Handle accents if option is checked
+                                    if (accentsInsensitiveCheckbox.checked && 
+                                        ['e', 'E', 'a', 'A', 'i', 'I', 'o', 'O', 'u', 'U'].includes(char)) {
+                                        switch(char.toLowerCase()) {
+                                            case 'e':
+                                                processedName += '[' + lower + upper + 'éèêëÉÈÊË]';
+                                                break;
+                                            case 'a':
+                                                processedName += '[' + lower + upper + 'àâäÀÂÄ]';
+                                                break;
+                                            case 'i':
+                                                processedName += '[' + lower + upper + 'îïÎÏ]';
+                                                break;
+                                            case 'o':
+                                                processedName += '[' + lower + upper + 'ôöÔÖ]';
+                                                break;
+                                            case 'u':
+                                                processedName += '[' + lower + upper + 'ùûüÙÛÜ]';
+                                                break;
+                                        }
+                                    } else {
+                                        processedName += '[' + lower + upper + ']';
+                                    }
+                                } else if (accentsInsensitiveCheckbox.checked) {
+                                    // Handle specific accented characters
+                                    switch(char) {
+                                        case 'é':
+                                        case 'è':
+                                        case 'ê':
+                                        case 'ë':
+                                            processedName += '[éèêeë]';
+                                            break;
+                                        case 'É':
+                                        case 'È':
+                                        case 'Ê':
+                                        case 'Ë':
+                                            processedName += '[ÉÈÊËE]';
+                                            break;
+                                        // Add other accent cases as needed
+                                        default:
+                                            processedName += char;
+                                    }
+                                } else {
+                                    processedName += char;
+                                }
+                            }
+                            
+                            return processedName;
+                        });
+                        
+                        // Join processed names with OR operator
+                        regex += processedNames.join('|');
+                        
+                        // End group for content names
+                        regex += ')';
+                    }
+                } else {
+                    // Default if no content name provided
+                    regex += '.*';
+                }
+                
+                // Add separators
+                const separators = [];
+                if (dotSeparatorCheckbox.checked) separators.push('\\.');
+                if (spaceSeparatorCheckbox.checked) separators.push('\\s');
+                if (underscoreSeparatorCheckbox.checked) separators.push('_');
+                if (dashSeparatorCheckbox.checked) separators.push('-');
+                
+                if (separators.length > 0) {
+                    regex += '[' + separators.join('') + ']?';
+                }
+                
+                // Process content types if provided
+                if (contentTypeInput.value.trim()) {
+                    const contentTypes = contentTypeInput.value.split(',').map(type => type.trim());
+                    
+                    if (contentTypes.length > 0) {
+                        regex += '.*';
+                        
+                        // Start group for content types
+                        regex += '(';
+                        
+                        // Process each content type with case insensitivity if checked
+                        const processedTypes = contentTypes.map(type => {
+                            if (caseInsensitiveCheckbox.checked) {
+                                let processedType = '';
+                                for (let i = 0; i < type.length; i++) {
+                                    const char = type[i];
+                                    if (char.match(/[a-zA-Z]/)) {
+                                        const lower = char.toLowerCase();
+                                        const upper = char.toUpperCase();
+                                        processedType += '[' + lower + upper + ']';
+                                    } else {
+                                        processedType += char;
+                                    }
+                                }
+                                return processedType;
+                            } else {
+                                return type;
+                            }
+                        });
+                        
+                        // Join processed types with OR operator
+                        regex += processedTypes.join('|');
+                        
+                        // End group for content types
+                        regex += ')';
+                    }
+                }
+                
+                // Add additional filters if provided
+                if (additionalFiltersInput.value.trim()) {
+                    const filters = additionalFiltersInput.value.split(',').map(filter => filter.trim());
+                    
+                    if (filters.length > 0) {
+                        regex += '.*';
+                        
+                        // Add each filter
+                        filters.forEach((filter, index) => {
+                            regex += filter;
+                            
+                            // Add .* between filters
+                            if (index < filters.length - 1) {
+                                regex += '.*';
+                            }
+                        });
+                    }
+                }
+                
+                // Update the output
+                regexOutput.textContent = regex;
+            }
+            
+            // Clear form function
+            function clearForm() {
+                contentNameInput.value = '';
+                caseInsensitiveCheckbox.checked = true;
+                accentsInsensitiveCheckbox.checked = false;
+                dotSeparatorCheckbox.checked = true;
+                spaceSeparatorCheckbox.checked = true;
+                underscoreSeparatorCheckbox.checked = true;
+                dashSeparatorCheckbox.checked = true;
+                contentTypeInput.value = '';
+                additionalFiltersInput.value = 'FRENCH';
+                regexOutput.textContent = '^.*FRENCH';
+                testTorrentInput.value = '';
+                matchResult.innerHTML = '';
+            }
+            
+            // Add event listeners
+            generateBtn.addEventListener('click', generateRegex);
+            clearBtn.addEventListener('click', clearForm);
+            
+            // Copy button functionality
+            copyBtn.addEventListener('click', function() {
+                const textToCopy = regexOutput.textContent;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    copyMessage.style.opacity = '1';
+                    setTimeout(() => {
+                        copyMessage.style.opacity = '0';
+                    }, 2000);
+                });
+            });
+            
+            // Test regex functionality
+            testBtn.addEventListener('click', function() {
+                const regexString = regexOutput.textContent;
+                const testString = testTorrentInput.value.trim();
+                
+                if (!testString) {
+                    matchResult.innerHTML = '<p>Veuillez entrer un nom de torrent à tester.</p>';
+                    matchResult.className = 'match-result';
+                    return;
+                }
+                
+                try {
+                    const regex = new RegExp(regexString);
+                    const isMatch = regex.test(testString);
+                    
+                    if (isMatch) {
+                        matchResult.innerHTML = '<p>✅ Correspondance trouvée! Ce torrent sera capturé par votre filtre.</p>';
+                        matchResult.className = 'match-result match-success';
+                    } else {
+                        matchResult.innerHTML = '<p>❌ Pas de correspondance. Ce torrent ne sera pas capturé avec cette regex.</p>';
+                        matchResult.className = 'match-result match-fail';
+                    }
+                } catch (error) {
+                    matchResult.innerHTML = '<p>Erreur dans l\'expression régulière: ' + error.message + '</p>';
+                    matchResult.className = 'match-result match-fail';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
